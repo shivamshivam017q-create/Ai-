@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NEXUS OS — Personal Operating System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-void:       #020408;
+      --bg-deep:       #050c15;
+      --bg-panel:      rgba(4, 18, 38, 0.85);
+      --bg-card:       rgba(6, 22, 46, 0.75);
+      --bg-input:      rgba(0, 180, 255, 0.05);
+      --cyan:          #00d4ff;
+      --cyan-dim:      rgba(0, 212, 255, 0.18);
+      --cyan-glow:     rgba(0, 212, 255, 0.55);
+      --purple:        #b400ff;
+      --purple-dim:    rgba(180, 0, 255, 0.15);
+      --purple-glow:   rgba(180, 0, 255, 0.5);
+      --blue-accent:   #0066ff;
+      --blue-dim:      rgba(0, 102, 255, 0.2);
+      --green:         #00ff88;
+      --green-dim:     rgba(0, 255, 136, 0.15);
+      --red:           #ff3366;
+      --orange:        #ff8800;
+      --text-primary:  #e0f4ff;
+      --text-secondary: rgba(160, 220, 255, 0.65);
+      --text-muted:    rgba(100, 170, 220, 0.4);
+      --border-subtle: rgba(0, 212, 255, 0.12);
+      --border-glow:   rgba(0, 212, 255, 0.4);
+      --glass-blur:    blur(16px) saturate(1.4);
+      --radius-sm:     8px;
+      --radius-md:     14px;
+      --radius-lg:     20px;
+      --radius-xl:     28px;
+      --sidebar-w:     240px;
+      --topbar-h:      58px;
+      --transition:    0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    [data-theme="light"] {
+      --bg-void:       #dde8f5;
+      --bg-deep:       #c8d9ee;
+      --bg-panel:      rgba(200, 220, 245, 0.92);
+      --bg-card:       rgba(210, 228, 248, 0.82);
+      --bg-input:      rgba(0, 100, 200, 0.07);
+      --text-primary:  #0a1a2e;
+      --text-secondary: rgba(20, 60, 110, 0.75);
+      --text-muted:    rgba(40, 80, 140, 0.5);
+      --border-subtle: rgba(0, 100, 200, 0.18);
+      --border-glow:   rgba(0, 100, 200, 0.45);
+      --cyan:          #0066cc;
+      --cyan-dim:      rgba(0, 100, 200, 0.15);
+      --purple:        #7700cc;
+      --purple-dim:    rgba(100, 0, 200, 0.12);
+      --green:         #00aa55;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 14px; scroll-behavior: smooth; }
+    body {
+      font-family: 'Rajdhani', sans-serif;
+      background: var(--bg-void);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow: hidden;
+      transition: background var(--transition), color var(--transition);
+    }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--cyan-dim); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--cyan); }
+
+    /* ── BOOT SCREEN ── */
+    #boot-screen {
+      position: fixed; inset: 0; z-index: 9999;
+      background: #000;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 32px;
+    }
+    #boot-screen.fade-out { animation: bootFade 0.8s ease forwards; }
+    @keyframes bootFade { to { opacity: 0; pointer-events: none; } }
+    .boot-logo {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 900; letter-spacing: 0.3em;
+      color: var(--cyan);
+      text-shadow: 0 0 30px var(--cyan), 0 0 80px var(--cyan-glow);
+      animation: logoPulse 1s ease-in-out infinite alternate;
+    }
+    @keyframes logoPulse {
+      from { text-shadow: 0 0 20px #00d4ff, 0 0 60px rgba(0,212,255,0.4); }
+      to   { text-shadow: 0 0 40px #00d4ff, 0 0 120px rgba(0,212,255,0.7), 0 0 200px rgba(0,212,255,0.25); }
+    }
+    .boot-sub {
+      font-family: 'Share Tech Mono', monospace;
+      color: rgba(0,212,255,0.6); font-size: 0.85rem; letter-spacing: 0.2em;
+    }
+    .boot-progress-wrap {
+      width: min(420px, 80vw); height: 3px;
+      background: rgba(0,212,255,0.1); border-radius: 3px; overflow: hidden;
+    }
+    .boot-progress-bar {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, var(--purple), var(--cyan));
+      border-radius: 3px; box-shadow: 0 0 12px var(--cyan);
+      transition: width 0.1s linear;
+    }
+    .boot-log {
+      font-family: 'Share Tech Mono', monospace; font-size: 0.72rem;
+      color: rgba(0,212,255,0.45); letter-spacing: 0.05em;
+      height: 80px; overflow: hidden; width: min(420px, 80vw);
+      display: flex; flex-direction: column; justify-content: flex-end; gap: 3px;
+    }
+    .boot-log div { animation: fadeIn 0.2s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* ── PARTICLES ── */
+    #particles-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+    /* ── APP SHELL ── */
+    #app {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      grid-template-rows: var(--topbar-h) 1fr;
+      height: 100vh;
+      position: relative; z-index: 1;
+      opacity: 0; transition: opacity 0.6s ease;
+    }
+    #app.visible { opacity: 1; }
+
+    /* ── TOPBAR ── */
+    #topbar {
+      grid-column: 1 / -1;
+      display: flex; align-items: center; gap: 16px;
+      padding: 0 20px;
+      background: var(--bg-panel);
+      backdrop-filter: var(--glass-blur);
+      border-bottom: 1px solid var(--border-subtle);
+      position: relative; z-index: 100;
+    }
+    .topbar-brand {
+      font-family: 'Orbitron', monospace; font-size: 1rem; font-weight: 700;
+      letter-spacing: 0.2em; color: var(--cyan);
+      text-shadow: 0 0 15px var(--cyan-glow);
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .topbar-brand span { color: var(--purple); text-shadow: 0 0 15px var(--purple-glow); }
+    #sidebar-toggle {
+      background: none; border: none; cursor: pointer;
+      color: var(--text-secondary); padding: 6px;
+      border-radius: var(--radius-sm);
+      transition: color var(--transition), background var(--transition); flex-shrink: 0;
+    }
+    #sidebar-toggle:hover { color: var(--cyan); background: var(--cyan-dim); }
+    .search-wrapper { flex: 1; max-width: 420px; position: relative; }
+    .search-wrapper svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
+    #global-search {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-xl); color: var(--text-primary);
+      font-family: 'Rajdhani', sans-serif; font-size: 0.9rem;
+      padding: 7px 14px 7px 36px; outline: none;
+      transition: border var(--transition), box-shadow var(--transition);
+    }
+    #global-search:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px var(--cyan-dim); }
+    #global-search::placeholder { color: var(--text-muted); }
+    .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+    .icon-btn {
+      background: none; border: none; cursor: pointer;
+      color: var(--text-secondary); padding: 7px;
+      border-radius: var(--radius-sm);
+      transition: color var(--transition), background var(--transition); position: relative;
+    }
+    .icon-btn:hover { color: var(--cyan); background: var(--cyan-dim); }
+    .notif-dot {
+      position: absolute; top: 5px; right: 5px;
+      width: 7px; height: 7px; background: var(--red);
+      border-radius: 50%; box-shadow: 0 0 8px var(--red);
+    }
+    #clock-mini {
+      font-family: 'Share Tech Mono', monospace; font-size: 0.85rem;
+      color: var(--cyan); letter-spacing: 0.06em; white-space: nowrap;
+    }
+    .avatar-btn {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--purple), var(--cyan));
+      border: none; cursor: pointer;
+      font-family: 'Orbitron', monospace; font-size: 0.7rem; color: #fff; font-weight: 700;
+      box-shadow: 0 0 12px var(--purple-glow);
+      transition: box-shadow var(--transition), transform var(--transition);
+    }
+    .avatar-btn:hover { box-shadow: 0 0 20px var(--purple-glow); transform: scale(1.08); }
+
+    /* ── SIDEBAR ── */
+    #sidebar {
+      background: var(--bg-panel); backdrop-filter: var(--glass-blur);
+      border-right: 1px solid var(--border-subtle);
+      display: flex; flex-direction: column;
+      padding: 16px 0; overflow: hidden;
+      transition: width var(--transition), min-width var(--transition);
+      width: var(--sidebar-w); min-width: var(--sidebar-w);
+      position: relative; z-index: 90;
+    }
+    #sidebar.collapsed { width: 62px; min-width: 62px; }
+    .sidebar-section-label {
+      font-family: 'Orbitron', monospace; font-size: 0.58rem;
+      letter-spacing: 0.22em; color: var(--text-muted);
+      padding: 10px 18px 4px; white-space: nowrap; overflow: hidden;
+      transition: opacity var(--transition);
+    }
+    #sidebar.collapsed .sidebar-section-label { opacity: 0; }
+    .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 18px; cursor: pointer;
+      color: var(--text-secondary); font-size: 0.9rem; font-weight: 500;
+      letter-spacing: 0.04em; white-space: nowrap; overflow: hidden;
+      transition: background var(--transition), color var(--transition);
+      border-left: 2px solid transparent;
+    }
+    .nav-item:hover { background: var(--cyan-dim); color: var(--cyan); border-left-color: var(--cyan); }
+    .nav-item.active {
+      background: linear-gradient(90deg, var(--cyan-dim), transparent);
+      color: var(--cyan); border-left-color: var(--cyan);
+    }
+    .nav-item.active .nav-icon { filter: drop-shadow(0 0 6px var(--cyan)); }
+    .nav-icon { flex-shrink: 0; }
+    .nav-label { transition: opacity var(--transition), width var(--transition); }
+    #sidebar.collapsed .nav-label { opacity: 0; width: 0; overflow: hidden; }
+    #sidebar.collapsed .nav-item { justify-content: center; padding: 10px; border-left: none; }
+    .sidebar-footer { margin-top: auto; border-top: 1px solid var(--border-subtle); padding: 12px 18px; overflow: hidden; }
+    .user-info { display: flex; align-items: center; gap: 10px; }
+    .user-avatar {
+      width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%;
+      background: linear-gradient(135deg, var(--purple), var(--blue-accent));
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Orbitron', monospace; font-size: 0.65rem; color: #fff; font-weight: 700;
+    }
+    .user-name { font-size: 0.85rem; font-weight: 600; white-space: nowrap; }
+    .user-status { font-size: 0.72rem; color: var(--green); display: flex; align-items: center; gap: 5px; }
+    .status-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--green); box-shadow: 0 0 8px var(--green);
+      animation: statusPulse 2s ease infinite;
+    }
+    @keyframes statusPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    #sidebar.collapsed .user-details { display: none; }
+
+    /* ── MAIN CONTENT ── */
+    #main {
+      overflow-y: auto; padding: 20px;
+      display: none;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      grid-auto-rows: min-content;
+      gap: 16px; align-content: start;
+    }
+    #main.active-view { display: grid; }
+
+    /* ── AI VIEW (full panel) ── */
+    #ai-view {
+      display: none; flex-direction: column;
+      overflow: hidden;
+    }
+    #ai-view.active-view { display: flex; }
+
+    /* ── GLASS CARD ── */
+    .card {
+      background: var(--bg-card); backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--border-subtle); border-radius: var(--radius-lg);
+      padding: 18px; position: relative; overflow: hidden;
+      transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+      animation: cardFadeIn 0.5s ease both;
+    }
+    @keyframes cardFadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    .card:hover {
+      border-color: var(--border-glow);
+      box-shadow: 0 0 30px rgba(0,212,255,0.08), 0 8px 32px rgba(0,0,0,0.4);
+      transform: translateY(-2px);
+    }
+    .card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--cyan-dim), transparent);
+    }
+    .card-title {
+      font-family: 'Orbitron', monospace; font-size: 0.7rem; font-weight: 600;
+      letter-spacing: 0.2em; color: var(--text-muted); text-transform: uppercase;
+      margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+    }
+    .card-title-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
+    .card-wide  { grid-column: span 2; }
+    .card-full  { grid-column: 1 / -1; }
+
+    /* ── CLOCK CARD ── */
+    #clock-card { text-align: center; background: linear-gradient(135deg, rgba(0,212,255,0.06), rgba(180,0,255,0.06)); }
+    #clock-time {
+      font-family: 'Orbitron', monospace; font-size: clamp(2.4rem, 4vw, 3.2rem);
+      font-weight: 700; letter-spacing: 0.06em; color: var(--cyan);
+      text-shadow: 0 0 25px var(--cyan-glow), 0 0 60px rgba(0,212,255,0.25); line-height: 1.1;
+    }
+    #clock-seconds { font-size: 1.2rem; color: var(--purple); text-shadow: 0 0 14px var(--purple-glow); }
+    #clock-date { font-family: 'Share Tech Mono', monospace; font-size: 0.8rem; color: var(--text-secondary); margin-top: 6px; letter-spacing: 0.1em; }
+    .clock-grid { display: flex; justify-content: center; gap: 4px; margin-top: 14px; }
+    .clock-segment {
+      background: var(--bg-input); border: 1px solid var(--border-subtle);
+      border-radius: 4px; padding: 5px 10px;
+      font-family: 'Share Tech Mono', monospace; font-size: 0.7rem; color: var(--text-secondary);
+    }
+
+    /* ── WEATHER ── */
+    .weather-top { display: flex; align-items: center; justify-content: space-between; }
+    .weather-temp { font-family: 'Orbitron', monospace; font-size: 2.8rem; font-weight: 700; color: var(--cyan); text-shadow: 0 0 20px var(--cyan-glow); }
+    .weather-icon { font-size: 2.8rem; filter: drop-shadow(0 0 10px rgba(255,200,50,0.5)); }
+    .weather-city { font-size: 1.1rem; font-weight: 600; margin-top: 2px; }
+    .weather-cond { font-size: 0.85rem; color: var(--text-secondary); }
+    .weather-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+    .weather-stat { background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 8px 10px; font-size: 0.78rem; }
+    .weather-stat-label { color: var(--text-muted); font-size: 0.68rem; letter-spacing: 0.08em; }
+    .weather-stat-value { color: var(--text-primary); font-weight: 600; margin-top: 2px; font-family: 'Share Tech Mono', monospace; }
+
+    /* ── QUICK STATS ── */
+    .stat-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .stat-pill {
+      background: var(--bg-input); border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-xl); padding: 5px 12px;
+      font-family: 'Share Tech Mono', monospace; font-size: 0.75rem;
+      color: var(--text-secondary); display: flex; align-items: center; gap: 6px;
+    }
+    .stat-pill-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); }
+
+    /* ── TASKS ── */
+    .task-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 0; border-bottom: 1px solid var(--border-subtle);
+    }
+    .task-item:last-child { border-bottom: none; }
+    .task-check {
+      width: 16px; height: 16px; border-radius: 4px;
+      border: 1px solid var(--border-glow); background: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      transition: background var(--transition), border var(--transition);
+    }
+    .task-check.done { background: var(--cyan); border-color: var(--cyan); }
+    .task-check.done::after { content: '✓'; font-size: 10px; color: #000; font-weight: 700; }
+    .task-label { font-size: 0.87rem; flex: 1; }
+    .task-label.done { text-decoration: line-through; color: var(--text-muted); }
+    .task-badge {
+      font-size: 0.62rem; padding: 2px 7px; border-radius: 10px;
+      font-family: 'Share Tech Mono', monospace; font-weight: 600;
+    }
+    .badge-high { background: rgba(255,51,102,0.15); color: var(--red); border: 1px solid rgba(255,51,102,0.3); }
+    .badge-med  { background: rgba(255,136,0,0.15); color: var(--orange); border: 1px solid rgba(255,136,0,0.3); }
+    .badge-low  { background: rgba(0,255,136,0.12); color: var(--green); border: 1px solid rgba(0,255,136,0.25); }
+
+    /* ── ACTIVITY FEED ── */
+    .activity-item { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border-subtle); }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+    .activity-text { font-size: 0.84rem; line-height: 1.4; }
+    .activity-time { font-family: 'Share Tech Mono', monospace; font-size: 0.68rem; color: var(--text-muted); margin-top: 2px; }
+
+    /* ── SYSTEM METRICS ── */
+    .metric-bar-wrap { margin-bottom: 10px; }
+    .metric-label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; font-size: 0.8rem; }
+    .metric-label { color: var(--text-secondary); font-weight: 500; }
+    .metric-val { font-family: 'Share Tech Mono', monospace; font-size: 0.75rem; color: var(--cyan); }
+    .metric-bar { height: 5px; background: var(--bg-input); border-radius: 5px; overflow: hidden; border: 1px solid var(--border-subtle); }
+    .metric-fill {
+      height: 100%; border-radius: 5px;
+      background: linear-gradient(90deg, var(--purple), var(--cyan));
+      box-shadow: 0 0 8px var(--cyan-glow);
+      transition: width 1.5s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* ══════════════════════════════════════════
+       ASTRA ULTRA AI — FULL PANEL
+    ══════════════════════════════════════════ */
+    #ai-view {
+      background: var(--bg-void);
+    }
+
+    /* Header bar inside AI view */
+    .astra-header {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 20px;
+      background: var(--bg-panel);
+      backdrop-filter: var(--glass-blur);
+      border-bottom: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+    }
+    .astra-logo {
+      font-family: 'Orbitron', monospace; font-size: 1.1rem; font-weight: 900;
+      letter-spacing: 0.15em; color: var(--cyan);
+      text-shadow: 0 0 15px var(--cyan-glow);
+    }
+    .astra-logo span { color: var(--purple); text-shadow: 0 0 15px var(--purple-glow); }
+    .astra-version {
+      font-family: 'Share Tech Mono', monospace; font-size: 0.65rem;
+      color: var(--text-muted); letter-spacing: 0.1em;
+      background: var(--bg-input); border: 1px solid var(--border-subtle);
+      border-radius: 4px; padding: 2px 7px;
+    }
+
+    /* Mode pills */
+    .modes-row {
+      display: flex; gap: 6px; flex-wrap: wrap;
+      padding: 10px 20px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+    }
+    .mode-pill {
+      font-family: 'Orbitron', monospace; font-size: 0.58rem;
+      letter-spacing: 0.1em; padding: 5px 12px;
+      border-radius: var(--radius-xl); cursor: pointer;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary); background: var(--bg-input);
+      transition: all var(--transition);
+    }
+    .mode-pill:hover { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
+    .mode-pill.active {
+      border-color: var(--cyan); color: #000; background: var(--cyan);
+      box-shadow: 0 0 12px var(--cyan-glow); font-weight: 700;
+    }
+    .mode-pill.purple-mode.active {
+      border-color: var(--purple); color: #fff; background: var(--purple);
+      box-shadow: 0 0 12px var(--purple-glow);
+    }
+
+    /* Chat area */
+    .astra-chat {
+      flex: 1; overflow-y: auto;
+      padding: 20px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+
+    /* Welcome screen */
+    .astra-welcome {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 16px;
+      padding: 40px 20px; text-align: center;
+    }
+    .astra-welcome-orb {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, var(--purple), var(--cyan));
+      box-shadow: 0 0 40px var(--cyan-glow), 0 0 80px var(--purple-glow);
+      animation: orbPulse 3s ease-in-out infinite;
+      position: relative;
+    }
+    .astra-welcome-orb::after {
+      content: ''; position: absolute; inset: -4px; border-radius: 50%;
+      border: 1px solid var(--cyan-dim);
+      animation: orbRing 3s ease-in-out infinite reverse;
+    }
+    @keyframes orbPulse {
+      0%, 100% { box-shadow: 0 0 40px var(--cyan-glow), 0 0 80px var(--purple-glow); transform: scale(1); }
+      50% { box-shadow: 0 0 60px var(--cyan-glow), 0 0 120px var(--purple-glow); transform: scale(1.05); }
+    }
+    @keyframes orbRing {
+      0%, 100% { transform: scale(1); opacity: 0.5; }
+      50% { transform: scale(1.15); opacity: 1; }
+    }
+    .astra-welcome h2 {
+      font-family: 'Orbitron', monospace; font-size: 1.4rem; font-weight: 700;
+      letter-spacing: 0.1em; color: var(--text-primary);
+    }
+    .astra-welcome p { font-size: 0.9rem; color: var(--text-secondary); max-width: 380px; line-height: 1.6; }
+    .quick-prompts { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 8px; }
+    .quick-prompt {
+      font-size: 0.8rem; padding: 7px 14px;
+      border: 1px solid var(--border-subtle); border-radius: var(--radius-xl);
+      background: var(--bg-input); color: var(--text-secondary);
+      cursor: pointer; transition: all var(--transition);
+      font-family: 'Rajdhani', sans-serif;
+    }
+    .quick-prompt:hover { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
+
+    /* Messages */
+    .msg-wrap { display: flex; flex-direction: column; gap: 4px; animation: msgIn 0.3s ease; }
+    @keyframes msgIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .msg-wrap.user { align-items: flex-end; }
+    .msg-wrap.ai { align-items: flex-start; }
+    .msg-meta {
+      font-family: 'Share Tech Mono', monospace; font-size: 0.63rem;
+      color: var(--text-muted); padding: 0 4px; letter-spacing: 0.05em;
+    }
+    .msg-bubble {
+      max-width: 75%; padding: 11px 16px; border-radius: 16px;
+      font-size: 0.9rem; line-height: 1.6;
+    }
+    .msg-bubble.user {
+      background: linear-gradient(135deg, rgba(0,102,255,0.4), rgba(0,212,255,0.25));
+      border: 1px solid rgba(0,212,255,0.3);
+      border-bottom-right-radius: 4px;
+    }
+    .msg-bubble.ai {
+      background: linear-gradient(135deg, rgba(180,0,255,0.18), rgba(0,102,255,0.15));
+      border: 1px solid rgba(180,0,255,0.25);
+      border-bottom-left-radius: 4px;
+      position: relative;
+    }
+    .msg-bubble.ai::before {
+      content: 'ASTRA'; position: absolute; top: -18px; left: 4px;
+      font-family: 'Orbitron', monospace; font-size: 0.55rem;
+      color: var(--purple); letter-spacing: 0.12em;
+    }
+    .typing-bubble {
+      background: linear-gradient(135deg, rgba(180,0,255,0.18), rgba(0,102,255,0.15));
+      border: 1px solid rgba(180,0,255,0.25);
+      border-radius: 16px; border-bottom-left-radius: 4px;
+      padding: 12px 16px; display: inline-flex; gap: 5px; align-items: center;
+    }
+    .typing-bubble span {
+      width: 7px; height: 7px; border-radius: 50%; background: var(--purple);
+      animation: typeDot 1.2s infinite;
+    }
+    .typing-bubble span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-bubble span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typeDot { 0%,60%,100% { opacity: 0.3; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-5px); } }
+
+    /* Image preview in chat */
+    .img-preview-wrap { display: flex; justify-content: flex-end; margin-bottom: 4px; }
+    .img-preview-wrap img { max-width: 200px; border-radius: var(--radius-md); border: 1px solid var(--border-glow); }
+
+    /* Memory badge */
+    .memory-badge {
+      font-family: 'Share Tech Mono', monospace; font-size: 0.62rem;
+      background: var(--green-dim); border: 1px solid rgba(0,255,136,0.3);
+      color: var(--green); border-radius: 4px; padding: 2px 7px;
+      letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px;
+    }
+
+    /* Input area */
+    .astra-input-area {
+      padding: 14px 20px;
+      background: var(--bg-panel);
+      border-top: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+    }
+    .input-image-preview {
+      display: none; align-items: center; gap: 8px;
+      margin-bottom: 10px; padding: 8px 12px;
+      background: var(--bg-input); border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+    }
+    .input-image-preview.visible { display: flex; }
+    .input-image-preview img { width: 48px; height: 48px; object-fit: cover; border-radius: 6px; }
+    .input-image-preview span { font-size: 0.8rem; color: var(--text-secondary); flex: 1; }
+    .remove-img-btn { background: none; border: none; color: var(--red); cursor: pointer; font-size: 1rem; padding: 2px 6px; }
+    .input-row {
+      display: flex; gap: 8px; align-items: flex-end;
+    }
+    .input-actions { display: flex; gap: 6px; }
+    .input-action-btn {
+      background: var(--bg-input); border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm); color: var(--text-secondary);
+      cursor: pointer; padding: 8px 10px;
+      transition: all var(--transition); display: flex; align-items: center;
+    }
+    .input-action-btn:hover { color: var(--cyan); border-color: var(--cyan); background: var(--cyan-dim); }
+    .input-action-btn.recording { color: var(--red); border-color: var(--red); background: rgba(255,51,102,0.1); animation: recPulse 1s ease infinite; }
+    @keyframes recPulse { 0%,100% { box-shadow: none; } 50% { box-shadow: 0 0 10px rgba(255,51,102,0.4); } }
+    #astra-input {
+      flex: 1; background: var(--bg-input); border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-xl); color: var(--text-primary);
+      font-family: 'Rajdhani', sans-serif; font-size: 0.95rem;
+      padding: 10px 18px; outline: none; resize: none;
+      min-height: 42px; max-height: 120px; overflow-y: auto;
+      transition: border var(--transition), box-shadow var(--transition);
+      line-height: 1.4;
+    }
+    #astra-input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px var(--purple-dim); }
+    #astra-input::placeholder { color: var(--text-muted); }
+    .send-btn {
+      background: linear-gradient(135deg, var(--purple), var(--blue-accent));
+      border: none; border-radius: var(--radius-xl);
+      color: #fff; cursor: pointer; padding: 10px 20px;
+      font-family: 'Orbitron', monospace; font-size: 0.65rem;
+      letter-spacing: 0.1em; font-weight: 600;
+      transition: opacity var(--transition), transform var(--transition), box-shadow var(--transition);
+      box-shadow: 0 0 15px var(--purple-glow);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .send-btn:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 4px 20px var(--purple-glow); }
+    .send-btn:active { transform: translateY(0); }
+
+    /* Status bar below input */
+    .astra-status-bar {
+      display: flex; align-items: center; gap: 10px; margin-top: 8px;
+      font-family: 'Share Tech Mono', monospace; font-size: 0.65rem; color: var(--text-muted);
+    }
+    .lang-select {
+      background: var(--bg-input); border: 1px solid var(--border-subtle);
+      color: var(--text-secondary); font-family: 'Share Tech Mono', monospace;
+      font-size: 0.65rem; padding: 3px 8px; border-radius: 4px; cursor: pointer; outline: none;
+    }
+    .lang-select:focus { border-color: var(--cyan); }
+    .memory-toggle {
+      display: flex; align-items: center; gap: 5px; cursor: pointer;
+    }
+    .toggle-switch {
+      width: 28px; height: 15px; background: var(--border-subtle);
+      border-radius: 10px; position: relative; transition: background var(--transition);
+    }
+    .toggle-switch.on { background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .toggle-thumb {
+      width: 11px; height: 11px; border-radius: 50%;
+      background: #fff; position: absolute; top: 2px; left: 2px;
+      transition: left var(--transition);
+    }
+    .toggle-switch.on .toggle-thumb { left: 15px; }
+
+    /* Clear button */
+    .clear-btn {
+      background: none; border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm); color: var(--text-muted);
+      cursor: pointer; padding: 3px 9px;
+      font-family: 'Share Tech Mono', monospace; font-size: 0.63rem;
+      transition: all var(--transition); margin-left: auto;
+    }
+    .clear-btn:hover { color: var(--red); border-color: var(--red); }
+
+    /* ── HIDDEN FILE INPUT ── */
+    #img-upload { display: none; }
+
+    /* ── THEME TOGGLE ── */
+    #theme-btn { font-size: 1rem; }
+  </style>
+</head>
+<body>
+
+<!-- BOOT SCREEN -->
+<div id="boot-screen">
+  <div class="boot-logo">NEXUS OS</div>
+  <div class="boot-sub">PERSONAL OPERATING SYSTEM v3.0</div>
+  <div class="boot-progress-wrap"><div class="boot-progress-bar" id="boot-bar"></div></div>
+  <div class="boot-log" id="boot-log"></div>
+</div>
+
+<!-- PARTICLES -->
+<canvas id="particles-canvas"></canvas>
+
+<!-- APP -->
+<div id="app">
+  <!-- TOPBAR -->
+  <header id="topbar">
+    <button id="sidebar-toggle" title="Toggle Sidebar">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+    <div class="topbar-brand">NEXUS<span>OS</span></div>
+    <div class="search-wrapper">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" id="global-search" placeholder="Search anything..."/>
+    </div>
+    <div class="topbar-right">
+      <button class="icon-btn" id="theme-btn" title="Toggle Theme">🌙</button>
+      <button class="icon-btn" title="Notifications">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        <span class="notif-dot"></span>
+      </button>
+      <span id="clock-mini">--:--:--</span>
+      <button class="avatar-btn">NX</button>
+    </div>
+  </header>
+
+  <!-- SIDEBAR -->
+  <nav id="sidebar">
+    <div class="sidebar-section-label">NAVIGATION</div>
+    <div class="nav-item active" data-view="dashboard">
+      <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+      </svg>
+      <span class="nav-label">Dashboard</span>
+    </div>
+    <div class="nav-item" data-view="ai">
+      <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+      </svg>
+      <span class="nav-label">Astra AI</span>
+    </div>
+    <div class="nav-item">
+      <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+      </svg>
+      <span class="nav-label">Projects</span>
+    </div>
+    <div class="nav-item">
+      <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      <span class="nav-label">Calendar</span>
+    </div>
+    <div class="nav-item">
+      <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+      <span class="nav-label">Analytics</span>
+    </div>
+    <div class="sidebar-section-label">SYSTEM</div>
+    <div class="nav-item">
+      <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+      </svg>
+      <span class="nav-label">Settings</span>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar">NX</div>
+        <div class="user-details">
+          <div class="user-name">NEXUS USER</div>
+          <div class="user-status"><span class="status-dot"></span> ONLINE</div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- DASHBOARD VIEW -->
+  <main id="main" class="active-view">
+    <!-- Clock -->
+    <div class="card" id="clock-card">
+      <div class="card-title"><span class="card-title-dot"></span>SYSTEM TIME</div>
+      <div id="clock-time">00<span id="clock-colon">:</span>00<span id="clock-seconds">:00</span></div>
+      <div id="clock-date">LOADING...</div>
+      <div class="clock-grid">
+        <div class="clock-segment" id="tz-seg">UTC+0</div>
+        <div class="clock-segment" id="uptime-seg">UP: 0m</div>
+        <div class="clock-segment" id="day-seg">DAY 1</div>
+      </div>
+    </div>
+
+    <!-- Weather -->
+    <div class="card">
+      <div class="card-title"><span class="card-title-dot"></span>ENVIRONMENT</div>
+      <div class="weather-top">
+        <div>
+          <div class="weather-temp">28°C</div>
+          <div class="weather-city">Mumbai, IN</div>
+          <div class="weather-cond">Partly Cloudy</div>
+        </div>
+        <div class="weather-icon">⛅</div>
+      </div>
+      <div class="weather-stats">
+        <div class="weather-stat"><div class="weather-stat-label">HUMIDITY</div><div class="weather-stat-value">72%</div></div>
+        <div class="weather-stat"><div class="weather-stat-label">WIND</div><div class="weather-stat-value">14 km/h</div></div>
+        <div class="weather-stat"><div class="weather-stat-label">UV INDEX</div><div class="weather-stat-value">6</div></div>
+        <div class="weather-stat"><div class="weather-stat-label">FEELS LIKE</div><div class="weather-stat-value">31°C</div></div>
+      </div>
+    </div>
+
+    <!-- Quick Access to Astra AI (NEW) -->
+    <div class="card" style="background: linear-gradient(135deg, rgba(180,0,255,0.08), rgba(0,212,255,0.06)); cursor:pointer;" onclick="switchView('ai')">
+      <div class="card-title"><span class="card-title-dot" style="background:var(--purple);box-shadow:0 0 8px var(--purple);"></span>ASTRA AI — QUICK ACCESS</div>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div style="width:48px;height:48px;border-radius:50%;background:radial-gradient(circle at 35% 35%,var(--purple),var(--cyan));box-shadow:0 0 20px var(--cyan-glow);flex-shrink:0;animation:orbPulse 3s ease-in-out infinite;"></div>
+        <div>
+          <div style="font-size:1rem;font-weight:600;color:var(--text-primary);margin-bottom:4px;">Astra Ultra v2</div>
+          <div style="font-size:0.8rem;color:var(--text-secondary);">Voice · Vision · 6 Modes · Memory · Hindi/Hinglish</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font-size:0.78rem;color:var(--cyan);font-family:'Share Tech Mono',monospace;letter-spacing:0.05em;">→ Click to open full AI interface</div>
+    </div>
+
+    <!-- Tasks -->
+    <div class="card">
+      <div class="card-title"><span class="card-title-dot"></span>TASK QUEUE</div>
+      <div id="task-list">
+        <div class="task-item">
+          <div class="task-check" onclick="toggleTask(this)"></div>
+          <div class="task-label">Integrate Astra AI into NEXUS OS</div>
+          <span class="task-badge badge-high">HIGH</span>
+        </div>
+        <div class="task-item">
+          <div class="task-check done"></div>
+          <div class="task-label done">Design dashboard layout</div>
+          <span class="task-badge badge-low">DONE</span>
+        </div>
+        <div class="task-item">
+          <div class="task-check" onclick="toggleTask(this)"></div>
+          <div class="task-label">Add voice command support</div>
+          <span class="task-badge badge-med">MED</span>
+        </div>
+        <div class="task-item">
+          <div class="task-check" onclick="toggleTask(this)"></div>
+          <div class="task-label">Deploy to production server</div>
+          <span class="task-badge badge-high">HIGH</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- System Metrics -->
+    <div class="card">
+      <div class="card-title"><span class="card-title-dot"></span>SYSTEM METRICS</div>
+      <div class="metric-bar-wrap">
+        <div class="metric-label-row"><span class="metric-label">CPU USAGE</span><span class="metric-val" id="cpu-val">0%</span></div>
+        <div class="metric-bar"><div class="metric-fill" id="cpu-bar" style="width:0%"></div></div>
+      </div>
+      <div class="metric-bar-wrap">
+        <div class="metric-label-row"><span class="metric-label">MEMORY</span><span class="metric-val" id="mem-val">0%</span></div>
+        <div class="metric-bar"><div class="metric-fill" id="mem-bar" style="width:0%;background:linear-gradient(90deg,var(--blue-accent),var(--purple))"></div></div>
+      </div>
+      <div class="metric-bar-wrap">
+        <div class="metric-label-row"><span class="metric-label">NETWORK</span><span class="metric-val" id="net-val">0%</span></div>
+        <div class="metric-bar"><div class="metric-fill" id="net-bar" style="width:0%;background:linear-gradient(90deg,var(--green),var(--cyan))"></div></div>
+      </div>
+      <div class="metric-bar-wrap">
+        <div class="metric-label-row"><span class="metric-label">DISK I/O</span><span class="metric-val" id="disk-val">0%</span></div>
+        <div class="metric-bar"><div class="metric-fill" id="disk-bar" style="width:0%;background:linear-gradient(90deg,var(--orange),var(--red))"></div></div>
+      </div>
+    </div>
+
+    <!-- Activity Feed -->
+    <div class="card">
+      <div class="card-title"><span class="card-title-dot"></span>ACTIVITY FEED</div>
+      <div class="activity-item">
+        <div class="activity-dot" style="background:var(--cyan);box-shadow:0 0 6px var(--cyan)"></div>
+        <div><div class="activity-text">Astra Ultra AI integrated successfully</div><div class="activity-time">just now</div></div>
+      </div>
+      <div class="activity-item">
+        <div class="activity-dot" style="background:var(--purple);box-shadow:0 0 6px var(--purple)"></div>
+        <div><div class="activity-text">NEXUS OS v3.0 booted</div><div class="activity-time">2m ago</div></div>
+      </div>
+      <div class="activity-item">
+        <div class="activity-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)"></div>
+        <div><div class="activity-text">All systems nominal</div><div class="activity-time">5m ago</div></div>
+      </div>
+      <div class="activity-item">
+        <div class="activity-dot" style="background:var(--orange);box-shadow:0 0 6px var(--orange)"></div>
+        <div><div class="activity-text">Memory module optimized</div><div class="activity-time">12m ago</div></div>
+      </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="card card-full">
+      <div class="card-title"><span class="card-title-dot"></span>QUICK STATS</div>
+      <div class="stat-row">
+        <div class="stat-pill"><span class="stat-pill-dot"></span> ASTRA AI ONLINE</div>
+        <div class="stat-pill"><span class="stat-pill-dot" style="background:var(--cyan);box-shadow:0 0 6px var(--cyan)"></span> 6 AI MODES READY</div>
+        <div class="stat-pill"><span class="stat-pill-dot" style="background:var(--purple);box-shadow:0 0 6px var(--purple)"></span> VOICE ENABLED</div>
+        <div class="stat-pill"><span class="stat-pill-dot" style="background:var(--orange);box-shadow:0 0 6px var(--orange)"></span> VISION READY</div>
+        <div class="stat-pill"><span class="stat-pill-dot"></span> MEMORY ACTIVE</div>
+        <div class="stat-pill"><span class="stat-pill-dot" style="background:var(--blue-accent);box-shadow:0 0 6px var(--blue-accent)"></span> MULTI-LANG</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ASTRA AI VIEW -->
+  <div id="ai-view">
+    <!-- Astra Header -->
+    <div class="astra-header">
+      <div class="astra-logo">ASTRA <span>ULTRA</span></div>
+      <div class="astra-version">v2.0</div>
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+        <span style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--text-muted);">NEXUS INTEGRATED</span>
+        <span class="memory-badge">⚡ MEMORY ON</span>
+      </div>
+    </div>
+
+    <!-- Mode Pills -->
+    <div class="modes-row">
+      <div class="mode-pill active" data-mode="general" data-system="You are Astra Ultra, a next-gen AI assistant integrated into NEXUS OS. Be helpful, concise, and intelligent.">⚡ GENERAL</div>
+      <div class="mode-pill" data-mode="creative" data-system="You are Astra Ultra in Creative Mode. Generate imaginative, artistic, and inventive responses. Think outside the box.">🎨 CREATIVE</div>
+      <div class="mode-pill purple-mode" data-mode="code" data-system="You are Astra Ultra in Code Mode. You are an expert programmer. Provide clean, well-commented code with explanations. Support all major languages.">💻 CODE</div>
+      <div class="mode-pill" data-mode="concise" data-system="You are Astra Ultra in Concise Mode. Give extremely short, direct answers. No fluff. Maximum 3 sentences unless asked for more.">⚡ CONCISE</div>
+      <div class="mode-pill" data-mode="tutor" data-system="You are Astra Ultra in Tutor Mode. Explain concepts step by step, use examples, be patient and thorough like an expert teacher.">📚 TUTOR</div>
+      <div class="mode-pill" data-mode="hinglish" data-system="You are Astra Ultra. Always respond in Hinglish (mix of Hindi and English) in a friendly, casual tone. Use Devanagari or Roman script as appropriate.">🇮🇳 HINGLISH</div>
+    </div>
+
+    <!-- Chat messages -->
+    <div class="astra-chat" id="astra-chat">
+      <!-- Welcome shown initially -->
+      <div class="astra-welcome" id="astra-welcome">
+        <div class="astra-welcome-orb"></div>
+        <h2>ASTRA ULTRA v2</h2>
+        <p>Your intelligent AI assistant, now integrated into NEXUS OS. Voice, Vision, Memory — everything in one place.</p>
+        <div class="quick-prompts">
+          <div class="quick-prompt" onclick="sendQuick('What can you do?')">What can you do?</div>
+          <div class="quick-prompt" onclick="sendQuick('Mujhe ek poem likho')">Mujhe ek poem likho</div>
+          <div class="quick-prompt" onclick="sendQuick('Write a Python function to sort a list')">Python sort function</div>
+          <div class="quick-prompt" onclick="sendQuick('NEXUS OS ke baare mein batao')">NEXUS OS kya hai?</div>
+          <div class="quick-prompt" onclick="sendQuick('Analyze this image for me')">Analyze an image</div>
+          <div class="quick-prompt" onclick="sendQuick('Give me productivity tips')">Productivity tips</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="astra-input-area">
+      <div class="input-image-preview" id="img-preview-bar">
+        <img id="preview-thumb" src="" alt=""/>
+        <span id="preview-name">image.jpg</span>
+        <button class="remove-img-btn" onclick="removeImage()">✕</button>
+      </div>
+      <div class="input-row">
+        <div class="input-actions">
+          <button class="input-action-btn" id="mic-btn" title="Voice Input" onclick="toggleVoice()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
+            </svg>
+          </button>
+          <button class="input-action-btn" title="Upload Image" onclick="document.getElementById('img-upload').click()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
+          </button>
+        </div>
+        <textarea id="astra-input" placeholder="Ask Astra anything... (Enter to send, Shift+Enter for newline)" rows="1"></textarea>
+        <button class="send-btn" onclick="sendMessage()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+          SEND
+        </button>
+      </div>
+      <div class="astra-status-bar">
+        <span id="astra-status">● READY</span>
+        <select class="lang-select" id="lang-select">
+          <option value="en">🌐 EN</option>
+          <option value="hi">🇮🇳 HI</option>
+          <option value="hinglish">🇮🇳 HNG</option>
+        </select>
+        <div class="memory-toggle" onclick="toggleMemory()">
+          <div class="toggle-switch on" id="mem-toggle"><div class="toggle-thumb"></div></div>
+          <span>MEMORY</span>
+        </div>
+        <button class="clear-btn" onclick="clearChat()">✕ CLEAR</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="img-upload" accept="image/*" onchange="handleImageUpload(this)"/>
+
+<script>
+// ══════════════════════════════════
+// BOOT SEQUENCE
+// ══════════════════════════════════
+const bootLogs = [
+  '> Initializing NEXUS OS kernel v3.0...',
+  '> Loading glassmorphic UI engine...',
+  '> Mounting Astra Ultra AI module...',
+  '> Enabling voice & vision subsystems...',
+  '> Connecting to neural inference API...',
+  '> Loading memory persistence layer...',
+  '> Multi-language pack: EN / HI / HINGLISH',
+  '> All systems nominal. Welcome back.',
+];
+let logIdx = 0;
+const logEl = document.getElementById('boot-log');
+const barEl = document.getElementById('boot-bar');
+let prog = 0;
+
+const bootInt = setInterval(() => {
+  prog += 100 / bootLogs.length;
+  barEl.style.width = Math.min(prog, 100) + '%';
+  if (logIdx < bootLogs.length) {
+    const d = document.createElement('div');
+    d.textContent = bootLogs[logIdx++];
+    logEl.appendChild(d);
+    if (logEl.children.length > 5) logEl.removeChild(logEl.firstChild);
+  }
+  if (prog >= 100) {
+    clearInterval(bootInt);
+    setTimeout(() => {
+      document.getElementById('boot-screen').classList.add('fade-out');
+      setTimeout(() => {
+        document.getElementById('boot-screen').style.display = 'none';
+        document.getElementById('app').classList.add('visible');
+        initMetrics();
+      }, 800);
+    }, 400);
+  }
+}, 180);
+
+// ══════════════════════════════════
+// PARTICLES
+// ══════════════════════════════════
+const canvas = document.getElementById('particles-canvas');
+const ctx = canvas.getContext('2d');
+let particles = [];
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+for (let i = 0; i < 55; i++) {
+  particles.push({
+    x: Math.random() * window.innerWidth,
+    y: Math.random() * window.innerHeight,
+    r: Math.random() * 1.5 + 0.3,
+    dx: (Math.random() - 0.5) * 0.35,
+    dy: (Math.random() - 0.5) * 0.35,
+    alpha: Math.random() * 0.4 + 0.1,
+    color: Math.random() > 0.5 ? '0,212,255' : '180,0,255',
+  });
+}
+
+function animParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles.forEach(p => {
+    p.x += p.dx; p.y += p.dy;
+    if (p.x < 0) p.x = canvas.width;
+    if (p.x > canvas.width) p.x = 0;
+    if (p.y < 0) p.y = canvas.height;
+    if (p.y > canvas.height) p.y = 0;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${p.color},${p.alpha})`;
+    ctx.fill();
+  });
+  requestAnimationFrame(animParticles);
+}
+animParticles();
+
+// ══════════════════════════════════
+// CLOCK
+// ══════════════════════════════════
+let startTime = Date.now();
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2,'0');
+  const m = String(now.getMinutes()).padStart(2,'0');
+  const s = String(now.getSeconds()).padStart(2,'0');
+  document.getElementById('clock-time').innerHTML = `${h}<span id="clock-colon" style="opacity:${now.getSeconds()%2===0?'1':'0.3'};transition:opacity 0.2s">:</span>${m}<span id="clock-seconds" style="font-size:1.2rem;color:var(--purple);text-shadow:0 0 14px var(--purple-glow)">:${s}</span>`;
+  document.getElementById('clock-mini').textContent = `${h}:${m}:${s}`;
+  const days = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  document.getElementById('clock-date').textContent = `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+  const offset = -now.getTimezoneOffset() / 60;
+  document.getElementById('tz-seg').textContent = `UTC${offset >= 0 ? '+' : ''}${offset}`;
+  const upMin = Math.floor((Date.now() - startTime) / 60000);
+  document.getElementById('uptime-seg').textContent = `UP: ${upMin}m`;
+  const dayOfYear = Math.ceil((now - new Date(now.getFullYear(),0,0)) / 86400000);
+  document.getElementById('day-seg').textContent = `DAY ${dayOfYear}`;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ══════════════════════════════════
+// THEME
+// ══════════════════════════════════
+let isDark = true;
+document.getElementById('theme-btn').addEventListener('click', () => {
+  isDark = !isDark;
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  document.getElementById('theme-btn').textContent = isDark ? '🌙' : '☀️';
+});
+
+// ══════════════════════════════════
+// SIDEBAR TOGGLE
+// ══════════════════════════════════
+document.getElementById('sidebar-toggle').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('collapsed');
+});
+
+// ══════════════════════════════════
+// NAVIGATION / VIEW SWITCHING
+// ══════════════════════════════════
+function switchView(view) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const navTarget = document.querySelector(`.nav-item[data-view="${view}"]`);
+  if (navTarget) navTarget.classList.add('active');
+
+  document.getElementById('main').classList.toggle('active-view', view === 'dashboard');
+  document.getElementById('ai-view').classList.toggle('active-view', view === 'ai');
+}
+
+document.querySelectorAll('.nav-item[data-view]').forEach(item => {
+  item.addEventListener('click', () => switchView(item.dataset.view));
+});
+
+// ══════════════════════════════════
+// SYSTEM METRICS (simulated)
+// ══════════════════════════════════
+function initMetrics() {
+  let targets = { cpu: 38, mem: 62, net: 27, disk: 14 };
+  let currents = { cpu: 0, mem: 0, net: 0, disk: 0 };
+
+  function setMetric(id, val) {
+    document.getElementById(`${id}-val`).textContent = Math.round(val) + '%';
+    document.getElementById(`${id}-bar`).style.width = val + '%';
+  }
+
+  // Initial animate in
+  const initInt = setInterval(() => {
+    let done = true;
+    for (const k in targets) {
+      if (currents[k] < targets[k]) {
+        currents[k] = Math.min(currents[k] + 1.5, targets[k]);
+        setMetric(k, currents[k]);
+        done = false;
+      }
+    }
+    if (done) clearInterval(initInt);
+  }, 20);
+
+  // Fluctuate
+  setInterval(() => {
+    targets.cpu  = 25 + Math.random() * 45;
+    targets.mem  = 50 + Math.random() * 25;
+    targets.net  = 10 + Math.random() * 40;
+    targets.disk = 5  + Math.random() * 30;
+  }, 3000);
+
+  setInterval(() => {
+    for (const k in targets) {
+      const diff = targets[k] - currents[k];
+      currents[k] += diff * 0.08;
+      setMetric(k, currents[k]);
+    }
+  }, 100);
+}
+
+// ══════════════════════════════════
+// TASK TOGGLE
+// ══════════════════════════════════
+function toggleTask(el) {
+  el.classList.toggle('done');
+  const label = el.nextElementSibling;
+  label.classList.toggle('done');
+}
+
+// ══════════════════════════════════
+// ASTRA AI — STATE
+// ══════════════════════════════════
+let chatHistory = [];
+let memoryEnabled = true;
+let currentMode = 'general';
+let currentSystemPrompt = 'You are Astra Ultra, a next-gen AI assistant integrated into NEXUS OS. Be helpful, concise, and intelligent.';
+let isRecording = false;
+let recognition = null;
+let pendingImage = null; // {base64, mediaType, name}
+let welcomeShown = true;
+
+// Saved memory (cross-session)
+let memory = JSON.parse(localStorage.getItem('astra_memory') || '[]');
+
+// ── MODE SWITCHING ──
+document.querySelectorAll('.mode-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('.mode-pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    currentMode = pill.dataset.mode;
+    currentSystemPrompt = pill.dataset.system;
+    setStatus(`MODE: ${pill.textContent.trim()}`);
+
+    // Auto-switch lang to hinglish
+    if (currentMode === 'hinglish') {
+      document.getElementById('lang-select').value = 'hinglish';
+    }
+  });
+});
+
+// ── MEMORY TOGGLE ──
+function toggleMemory() {
+  memoryEnabled = !memoryEnabled;
+  const tog = document.getElementById('mem-toggle');
+  tog.classList.toggle('on', memoryEnabled);
+  setStatus(memoryEnabled ? '● MEMORY ON' : '● MEMORY OFF');
+}
+
+// ── STATUS ──
+function setStatus(txt) {
+  document.getElementById('astra-status').textContent = txt;
+}
+
+// ── CLEAR CHAT ──
+function clearChat() {
+  chatHistory = [];
+  const chat = document.getElementById('astra-chat');
+  chat.innerHTML = '';
+  // Re-add welcome
+  const welcome = document.createElement('div');
+  welcome.className = 'astra-welcome';
+  welcome.id = 'astra-welcome';
+  welcome.innerHTML = `
+    <div class="astra-welcome-orb"></div>
+    <h2>ASTRA ULTRA v2</h2>
+    <p>Chat cleared. Ready for a new session.</p>
+    <div class="quick-prompts">
+      <div class="quick-prompt" onclick="sendQuick('What can you do?')">What can you do?</div>
+      <div class="quick-prompt" onclick="sendQuick('Mujhe ek poem likho')">Mujhe ek poem likho</div>
+      <div class="quick-prompt" onclick="sendQuick('Write a Python hello world')">Python hello world</div>
+    </div>`;
+  chat.appendChild(welcome);
+  welcomeShown = true;
+  setStatus('● CLEARED');
+}
+
+// ── VOICE ──
+function toggleVoice() {
+  if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+    setStatus('✕ VOICE NOT SUPPORTED');
+    return;
+  }
+  if (isRecording) {
+    recognition && recognition.stop();
+    isRecording = false;
+    document.getElementById('mic-btn').classList.remove('recording');
+    setStatus('● READY');
+    return;
+  }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  const lang = document.getElementById('lang-select').value;
+  recognition.lang = lang === 'hi' || lang === 'hinglish' ? 'hi-IN' : 'en-US';
+  recognition.onstart = () => { isRecording = true; document.getElementById('mic-btn').classList.add('recording'); setStatus('🎙 LISTENING...'); };
+  recognition.onresult = e => {
+    const transcript = e.results[0][0].transcript;
+    document.getElementById('astra-input').value = transcript;
+    isRecording = false;
+    document.getElementById('mic-btn').classList.remove('recording');
+    setStatus('● VOICE CAPTURED');
+    sendMessage();
+  };
+  recognition.onerror = () => { isRecording = false; document.getElementById('mic-btn').classList.remove('recording'); setStatus('✕ VOICE ERROR'); };
+  recognition.onend = () => { isRecording = false; document.getElementById('mic-btn').classList.remove('recording'); };
+  recognition.start();
+}
+
+// ── IMAGE UPLOAD ──
+function handleImageUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const base64 = e.target.result.split(',')[1];
+    const mediaType = file.type;
+    pendingImage = { base64, mediaType, name: file.name };
+    document.getElementById('preview-thumb').src = e.target.result;
+    document.getElementById('preview-name').textContent = file.name;
+    document.getElementById('img-preview-bar').classList.add('visible');
+    setStatus('📷 IMAGE ATTACHED');
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+
+function removeImage() {
+  pendingImage = null;
+  document.getElementById('img-preview-bar').classList.remove('visible');
+  setStatus('● READY');
+}
+
+// ── QUICK PROMPTS ──
+function sendQuick(text) {
+  document.getElementById('astra-input').value = text;
+  sendMessage();
+}
+
+// ── RENDER MESSAGE ──
+function addMessage(role, text, imageData) {
+  const chat = document.getElementById('astra-chat');
+
+  // Remove welcome if still visible
+  const welcome = document.getElementById('astra-welcome');
+  if (welcome) welcome.remove();
+  welcomeShown = false;
+
+  const wrap = document.createElement('div');
+  wrap.className = `msg-wrap ${role}`;
+
+  const now = new Date();
+  const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+  if (role === 'user' && imageData) {
+    const imgWrap = document.createElement('div');
+    imgWrap.className = 'img-preview-wrap';
+    imgWrap.innerHTML = `<img src="data:${imageData.mediaType};base64,${imageData.base64}" alt="uploaded"/>`;
+    wrap.appendChild(imgWrap);
+  }
+
+  const meta = document.createElement('div');
+  meta.className = 'msg-meta';
+  meta.textContent = role === 'user' ? `YOU · ${timeStr}` : `ASTRA · ${timeStr}`;
+  wrap.appendChild(meta);
+
+  const bubble = document.createElement('div');
+  bubble.className = `msg-bubble ${role}`;
+  bubble.innerHTML = formatText(text);
+  wrap.appendChild(bubble);
+
+  chat.appendChild(wrap);
+  chat.scrollTop = chat.scrollHeight;
+  return bubble;
+}
+
+function formatText(text) {
+  // Basic markdown-lite: code blocks, bold, italic, inline code
+  return text
+    .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre style="background:rgba(0,0,0,0.4);border:1px solid var(--border-subtle);border-radius:8px;padding:10px;overflow-x:auto;font-family:\'Share Tech Mono\',monospace;font-size:0.82rem;margin:6px 0;white-space:pre-wrap;">$2</pre>')
+    .replace(/`([^`]+)`/g, '<code style="background:rgba(0,0,0,0.3);padding:1px 5px;border-radius:4px;font-family:\'Share Tech Mono\',monospace;font-size:0.85em;">$1</code>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/\n/g, '<br>');
+}
+
+function addTyping() {
+  const chat = document.getElementById('astra-chat');
+  const welcome = document.getElementById('astra-welcome');
+  if (welcome) welcome.remove();
+
+  const wrap = document.createElement('div');
+  wrap.className = 'msg-wrap ai';
+  wrap.id = 'typing-wrap';
+  wrap.innerHTML = `<div class="msg-meta">ASTRA · thinking...</div><div class="typing-bubble"><span></span><span></span><span></span></div>`;
+  chat.appendChild(wrap);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function removeTyping() {
+  const el = document.getElementById('typing-wrap');
+  if (el) el.remove();
+}
+
+// ── SEND MESSAGE ──
+async function sendMessage() {
+  const input = document.getElementById('astra-input');
+  const text = input.value.trim();
+  if (!text && !pendingImage) return;
+
+  const imgData = pendingImage;
+  input.value = '';
+  input.style.height = 'auto';
+  removeImage();
+
+  // Add user message
+  addMessage('user', text || '(image only)', imgData);
+
+  // Build API message content
+  let userContent;
+  if (imgData) {
+    userContent = [
+      { type: 'image', source: { type: 'base64', media_type: imgData.mediaType, data: imgData.base64 } },
+      { type: 'text', text: text || 'Please analyze this image.' }
+    ];
+  } else {
+    userContent = text;
+  }
+
+  // Build history for API
+  const apiMessages = [];
+
+  // Add memory context if enabled
+  if (memoryEnabled && memory.length > 0) {
+    apiMessages.push({
+      role: 'user',
+      content: `[MEMORY CONTEXT - previous sessions]: ${memory.slice(-5).join(' | ')}`
+    });
+    apiMessages.push({
+      role: 'assistant',
+      content: 'Memory context acknowledged. I will use this to personalize my responses.'
+    });
+  }
+
+  // Add chat history (last 10 turns)
+  chatHistory.slice(-10).forEach(msg => {
+    apiMessages.push({ role: msg.role, content: msg.content });
+  });
+
+  apiMessages.push({ role: 'user', content: userContent });
+
+  // Save to chat history
+  chatHistory.push({ role: 'user', content: userContent });
+
+  // Show typing
+  addTyping();
+  setStatus('⟳ PROCESSING...');
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: currentSystemPrompt,
+        messages: apiMessages,
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.error) throw new Error(data.error.message);
+
+    const reply = data.content.map(b => b.type === 'text' ? b.text : '').join('');
+
+    removeTyping();
+    addMessage('ai', reply);
+
+    // Save to history
+    chatHistory.push({ role: 'assistant', content: reply });
+
+    // Save to memory (key facts)
+    if (memoryEnabled && text.length > 10) {
+      const memEntry = `User said: "${text.substring(0,80)}"`;
+      memory.push(memEntry);
+      if (memory.length > 20) memory.shift();
+      localStorage.setItem('astra_memory', JSON.stringify(memory));
+    }
+
+    setStatus('● READY');
+  } catch (err) {
+    removeTyping();
+    addMessage('ai', `⚠️ Error: ${err.message}\n\nMake sure you're running this in an environment with API access.`);
+    setStatus('✕ ERROR');
+  }
+}
+
+// ── ENTER KEY ──
+document.getElementById('astra-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+// ── AUTO RESIZE TEXTAREA ──
+document.getElementById('astra-input').addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+});
+
+// ── LANG SELECT CHANGE ──
+document.getElementById('lang-select').addEventListener('change', e => {
+  const val = e.target.value;
+  if (val === 'hinglish') {
+    const hinglishPill = document.querySelector('.mode-pill[data-mode="hinglish"]');
+    if (hinglishPill) hinglishPill.click();
+  }
+});
+</script>
+</body>
+</html>
